@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload } from './auth.service';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor() {
-        const secret = process.env.JWT_SECRET;
-        const expiresIn = process.env.JWT_EXPIRES_IN;
+    constructor(configService: ConfigService) {
+        const secret = configService.get<string>('JWT_SECRET');
+        const expiresIn = configService.get<string>('JWT_EXPIRATION');
 
         if (!secret || !expiresIn) {
-            throw new Error('JWT_SECRET or JWT_EXPIRES_IN is not set');
+            throw new ForbiddenException(
+                'JWT_SECRET or JWT_EXPIRATION is not set in .env',
+            );
         }
 
         super({
@@ -20,7 +24,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    validate(payload: JwtPayload) {
-        return { userId: payload.sub, email: payload.email };
+    validate(payload: JwtPayload): {
+        userId: typeof payload.sub;
+        email: string;
+        role: string;
+    } {
+        return {
+            userId: payload.sub,
+            email: payload.email,
+            role: payload.role,
+        };
     }
 }
