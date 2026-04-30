@@ -4,12 +4,13 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from './schemas/user.schema';
-import { Model, Types } from 'mongoose';
+import { UserDocument } from '../user/schemas/user.schema';
+import { Types } from 'mongoose';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { UserService } from '../user/user.service';
+
 export interface SignupResponse {
     status: 'success' | 'error';
     message: string;
@@ -22,6 +23,7 @@ export interface SignupResponse {
         };
     };
 }
+
 export interface LoginResponse {
     status: 'success' | 'error';
     message: string;
@@ -35,16 +37,17 @@ export interface LoginResponse {
         token: string;
     };
 }
+
 export interface JwtPayload {
     sub: Types.ObjectId;
     email: string;
     role: string;
 }
+
 @Injectable()
 export class AuthService {
-    [x: string]: any;
     constructor(
-        @InjectModel(User.name) private userModel: Model<UserDocument>,
+        private userService: UserService,
         private jwtService: JwtService,
     ) {}
 
@@ -52,9 +55,7 @@ export class AuthService {
         const { email, password, phone, profilePicUrl } = signupDto;
 
         //1- Check if the user already exists
-        const existingUser: UserDocument | null = await this.userModel
-            .findOne({ email })
-            .exec();
+        const existingUser = await this.userService.findByEmail(email);
         if (existingUser) {
             throw new ConflictException('Email is already registered');
         }
@@ -66,23 +67,22 @@ export class AuthService {
             typeof profilePicUrl === 'string' ? profilePicUrl : undefined;
 
         // 3. Create and save the new user
-        const newUser: UserDocument = new this.userModel({
+        const newUser = await this.userService.create({
             email,
             password: hashedPassword,
             phone,
             profilePicUrl: safeProfilePicUrl,
         });
-        const savedUser: UserDocument = await newUser.save();
 
         return {
             status: 'success',
             message: 'User registered successfully',
             data: {
                 user: {
-                    _id: savedUser._id,
-                    email: savedUser.email,
-                    role: savedUser.role,
-                    profilePicUrl: savedUser.profilePicUrl,
+                    _id: newUser._id,
+                    email: newUser.email,
+                    role: newUser.role,
+                    profilePicUrl: newUser.profilePicUrl,
                 },
             },
         };
@@ -91,9 +91,8 @@ export class AuthService {
     async login(loginDto: LoginDto): Promise<LoginResponse> {
         const { email, password } = loginDto;
         // 1. Find the user by email
-        const user: UserDocument | null = await this.userModel
-            .findOne({ email })
-            .exec();
+        const user: UserDocument | null =
+            await this.userService.findByEmail(email);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
