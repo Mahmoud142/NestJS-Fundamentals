@@ -6,34 +6,28 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserDocument } from '../user/schemas/user.schema';
+import { BaseResponse } from '../user/interfaces/user-response.interface';
 import { Types } from 'mongoose';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { UserService } from '../user/user.service';
 
-export interface SignupResponse {
-    status: 'success' | 'error';
-    message: string;
+interface SafeUser {
+    _id: Types.ObjectId;
+    email: string;
+    role: string;
+    profilePicUrl?: string;
+}
+
+export interface SignupResponse extends BaseResponse {
     data: {
-        user: {
-            _id: Types.ObjectId;
-            email: string;
-            role: string;
-            profilePicUrl?: string;
-        };
+        user: SafeUser;
     };
 }
 
-export interface LoginResponse {
-    status: 'success' | 'error';
-    message: string;
+export interface LoginResponse extends BaseResponse {
     data: {
-        user: {
-            _id: Types.ObjectId;
-            email: string;
-            role: string;
-            profilePicUrl?: string;
-        };
+        user: SafeUser;
         token: string;
     };
 }
