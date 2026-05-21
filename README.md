@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <a href="https://minifyapp.vercel.app/dashboard"><img src="https://img.shields.io/badge/Live_Demo-▶_Try_It-00C853?style=for-the-badge" alt="Live Demo" /></a>
+  <a href="https://minifyapp.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-▶_Try_It-00C853?style=for-the-badge" alt="Live Demo" /></a>
   &nbsp;
   <a href="https://github.com/Mahmoud142/minify-web"><img src="https://img.shields.io/badge/Frontend_Repo-minify--web-6C47FF?style=for-the-badge&logo=github" alt="Frontend Repo" /></a>
 </p>
